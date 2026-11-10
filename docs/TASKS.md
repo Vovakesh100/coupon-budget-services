@@ -2,8 +2,8 @@
 
 Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ item. Status: `todo`, `in-progress`, `done`.
 
-## T1: Project skeleton (done when CI-equivalent checks pass)
-- Status: todo
+## T1: Project skeleton
+- Status: done
 - Depends on: none
 - Do: `pyproject.toml` (Python 3.12, uv, ruff, mypy strict on `src/coupon_budget/domain`, pytest, Hypothesis), package layout `src/coupon_budget/{domain,ports,adapters,services,api,config}`, `tests/{unit,invariants,integration}`, `.gitignore`, `.env.example` with variable names only, one smoke test.
 - Acceptance:
