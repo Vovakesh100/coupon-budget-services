@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, CheckConstraint, DateTime, ForeignKey, String, text
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -28,10 +28,7 @@ class CampaignRow(Base):
 
 class CouponRow(Base):
     __tablename__ = "coupons"
-    __table_args__ = (
-        CheckConstraint("face_value_micro >= 0", name="coupons_face_value_nonneg"),
-        CheckConstraint("redeemed = (redeemed_at IS NOT NULL)", name="coupons_redeemed_consistent"),
-    )
+    __table_args__ = (CheckConstraint("face_value_micro >= 0", name="coupons_face_value_nonneg"),)
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     campaign_id: Mapped[str] = mapped_column(
@@ -39,5 +36,3 @@ class CouponRow(Base):
         index=True,
     )
     face_value_micro: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    redeemed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
-    redeemed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

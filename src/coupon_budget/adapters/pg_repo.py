@@ -72,8 +72,6 @@ class PgCampaignRepository:
             id=record.id,
             campaign_id=record.campaign_id,
             face_value_micro=record.face_value_micro,
-            redeemed=record.redeemed,
-            redeemed_at=record.redeemed_at,
         )
         async with self._sessions() as session:
             session.add(row)
@@ -97,6 +95,4 @@ class PgCampaignRepository:
             id=row.id,
             campaign_id=row.campaign_id,
             face_value_micro=row.face_value_micro,
-            redeemed=row.redeemed,
-            redeemed_at=row.redeemed_at,
         )
