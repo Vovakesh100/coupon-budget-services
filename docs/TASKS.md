@@ -38,7 +38,8 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Acceptance: service tests use only the fake; no Redis in unit tests.
 
 ## T6: Redis Lua adapter
-- Status: todo
+- Status: done
+- Note: integration tests use `REDIS_URL` instead of testcontainers, because Docker is not available in the build sandbox. Switch to testcontainers when CI has Docker (T9).
 - Depends on: T5
 - Do: `adapters/redis_budget.py` runs the budget check and decrement as one Lua script; idempotency key stored with 24-hour TTL; keys share a hash tag per campaign.
 - Acceptance: integration test with a real Redis (testcontainers): duplicate `Idempotency-Key` does not charge twice; N parallel redemptions do not exceed the budget (TZ criteria 2, 3).
