@@ -1,0 +1,8 @@
+# Business limits, version 1. Read by coupon_budget.config.rules.
+# Changing a value means a new file (for example rules.v2.toml), not a code change.
+version = 1
+
+[limits]
+idempotency_key_ttl_seconds = 86400
+max_campaign_budget_micro = 1000000000000
+max_coupon_face_value_micro = 100000000
