@@ -1,6 +1,10 @@
 # ADR 0001: Atomicity strategy for budget operations
 
-Status: Proposed. The decision is pending the owner's choice.
+Status: Accepted. The owner chose option A (Redis Lua script).
+
+## Decision
+Budget check and decrement run as one Redis Lua script, option A. The same invariant tests (`spent <= budget`, no double charge per idempotency key) apply.
+Consequence to plan for: Lua keys must share a hash tag per campaign so the script also works on Redis Cluster.
 
 ## Context
 Redeeming a coupon must check the remaining budget and decrement it in one step. Two concurrent redemptions must not both succeed when only one unit of budget is left.
