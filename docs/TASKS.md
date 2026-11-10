@@ -59,7 +59,7 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Acceptance: API tests; OpenAPI generated; the routes match TZ exactly.
 
 ## T9: Docker Compose and README
-- Status: todo
+- Status: in-progress. Config is valid (`docker compose config`); the sandbox cannot pull images from Docker Hub, so `docker compose up` must be confirmed on the owner's machine before this is done.
 - Depends on: T8
-- Do: `docker-compose.yml` with the service, Redis 7 and PostgreSQL 16; `.env.example` names only; README quick start works.
+- Do: `docker-compose.yml` with the service, Redis 7 (AOF on) and PostgreSQL 16; `.env.example` names only; README quick start works.
 - Acceptance: `docker compose up` starts all three; health check responds.
