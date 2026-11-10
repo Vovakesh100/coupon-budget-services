@@ -64,3 +64,10 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Depends on: T8
 - Do: `docker-compose.yml` with the service, Redis 7 (AOF on) and PostgreSQL 16; `.env.example` names only; README quick start works.
 - Acceptance: `docker compose up` starts all three; health check responds.
+
+## T10: Reconnect after a dropped Redis connection
+- Status: done
+- Depends on: T9
+- Note: the first budget read after `docker compose restart redis` returned 500. Fixed by a shared Redis client with retries (`adapters/redis_client.py`) and 503 mapping. This test reproduces the drop with CLIENT KILL and fails without the retries.
+- Do: integration test for a dropped connection; shared client factory used by the app.
+- Acceptance: test passes with the client factory, fails with retries disabled.
