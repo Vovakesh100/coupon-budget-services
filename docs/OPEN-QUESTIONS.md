@@ -1,7 +1,7 @@
 # Open questions
 
 1. ~~Which atomicity strategy for the MVP?~~ **Answered:** Redis Lua script (option A), see `docs/adr/0001-atomicity-strategy.md`.
-2. How long is an `Idempotency-Key` remembered? Proposed default: 24 hours.
-3. What happens to a coupon whose campaign expires between issue and redemption?
-4. Can a coupon be partially redeemed, or only in full?
-5. Should the budget state endpoint show reserved amounts, or only spent and remaining?
+2. **Idempotency-Key lifetime:** 24 hours. Answered: default accepted by the owner.
+3. **Campaign expires between issue and redemption:** redemption is refused after the campaign end time with a clear error; the coupon is not charged. Answered: default accepted by the owner (the default was not written out before, now it is).
+4. **Partial redemption:** only full redemption in the MVP. Answered: default accepted by the owner (the default was not written out before, now it is).
+5. **Budget state endpoint:** shows spent and remaining only, no reserved amounts in the MVP. Answered: default accepted by the owner (the default was not written out before, now it is).
