@@ -38,7 +38,6 @@ pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="DATABASE_URL is not se
 
 ROOT = Path(__file__).resolve().parents[2]
 ENDS = datetime(2027, 1, 1, tzinfo=UTC)
-REDEEMED_AT = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -92,28 +91,9 @@ def test_duplicate_campaign_is_rejected() -> None:
         _run(scenario)
 
 
-def test_coupon_round_trip_unredeemed() -> None:
+def test_coupon_round_trip() -> None:
     campaign = CampaignRecord(id="cmp-1", total_micro=1_000, ends_at=ENDS)
     coupon = CouponRecord(id="cpn-1", campaign_id="cmp-1", face_value_micro=250)
-
-    async def scenario(engine: AsyncEngine) -> CouponRecord | None:
-        repo = PgCampaignRepository(make_session_factory(engine))
-        await repo.add_campaign(campaign)
-        await repo.add_coupon(coupon)
-        return await repo.get_coupon("cpn-1")
-
-    assert _run(scenario) == coupon
-
-
-def test_coupon_round_trip_redeemed() -> None:
-    campaign = CampaignRecord(id="cmp-1", total_micro=1_000, ends_at=ENDS)
-    coupon = CouponRecord(
-        id="cpn-1",
-        campaign_id="cmp-1",
-        face_value_micro=250,
-        redeemed=True,
-        redeemed_at=REDEEMED_AT,
-    )
 
     async def scenario(engine: AsyncEngine) -> CouponRecord | None:
         repo = PgCampaignRepository(make_session_factory(engine))
@@ -160,22 +140,18 @@ def test_database_rejects_negative_total_even_without_the_domain() -> None:
         _run(scenario)
 
 
-def test_database_rejects_redeemed_without_timestamp() -> None:
-    async def scenario(engine: AsyncEngine) -> None:
-        async with engine.begin() as conn:
-            await conn.execute(
-                text("INSERT INTO campaigns (id, total_micro, ends_at) VALUES ('c', 1, :e)"),
-                {"e": ENDS},
-            )
-            await conn.execute(
+def test_coupons_table_has_no_redemption_state() -> None:
+    async def scenario(engine: AsyncEngine) -> set[str]:
+        async with engine.connect() as conn:
+            result = await conn.execute(
                 text(
-                    "INSERT INTO coupons (id, campaign_id, face_value_micro, redeemed) "
-                    "VALUES ('k', 'c', 1, true)"
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name = 'coupons'"
                 )
             )
+            return {str(row[0]) for row in result}
 
-    with pytest.raises(IntegrityError):
-        _run(scenario)
+    assert _run(scenario) == {"id", "campaign_id", "face_value_micro"}
 
 
 def test_migrated_schema_matches_models() -> None:

@@ -1,6 +1,6 @@
 # ADR 0002: Storage split between PostgreSQL and Redis
 
-Status: Accepted (owner approved the proposal on 2026-11-10)
+Status: Accepted (owner approved the proposal on 2026-11-10). Amended 2026-11-10: `redeemed` and `redeemed_at` removed from PostgreSQL (migration 0002), see Decision.
 
 ## Context
 
@@ -11,7 +11,10 @@ were issued. TZ and TASKS T7 call for PostgreSQL repositories.
 ## Decision
 
 - PostgreSQL stores campaign and coupon records: `campaigns(id, total_micro, ends_at)` and
-  `coupons(id, campaign_id, face_value_micro, redeemed, redeemed_at)`.
+  `coupons(id, campaign_id, face_value_micro)`.
+- Redemption status is not stored in PostgreSQL. Redis is the only source of truth for it.
+  The first draft had `redeemed` and `redeemed_at` columns with no sync path; migration 0002
+  removed them to avoid two sources of truth.
 - Spend and the atomic redemption check stay in Redis. PostgreSQL never stores `spent`
   or the remaining balance.
 - Access goes through `CampaignRepository` in `ports/repositories.py`. The adapter uses
@@ -21,12 +24,10 @@ were issued. TZ and TASKS T7 call for PostgreSQL repositories.
 
 ## Consequences
 
-- Known gap: `redeemed` and `redeemed_at` in PostgreSQL are not updated by the redemption
-  path yet. Until a sync step exists, PostgreSQL can show a coupon as unredeemed after Redis
-  redeemed it. T8 must either sync these fields or stop reading them.
-- Two stores must agree on campaigns and coupons. A coupon written to PostgreSQL but not
-  to Redis (or the reverse) can make redemption fail with "not found". Ordering of writes
-  and recovery after a partial failure are not designed yet.
+- Reports that need "was this coupon redeemed?" must read Redis. PostgreSQL cannot answer it.
+- Two stores still have to agree on campaigns and coupons. A coupon written to PostgreSQL
+  but not to Redis (or the reverse) makes redemption fail with "not found". The write order
+  and recovery after a partial failure are not designed yet; T8 must define them.
 - The 64-character id limit is a schema choice. Changing it needs a new migration.
 - Dependencies SQLAlchemy, asyncpg and Alembic were not in the project rules list. They are
   part of the approved proposal, but the project rules list should be updated to match.
