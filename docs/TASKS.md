@@ -59,7 +59,8 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Acceptance: API tests; OpenAPI generated; the routes match TZ exactly.
 
 ## T9: Docker Compose and README
-- Status: in-progress. Config is valid (`docker compose config`); the sandbox cannot pull images from Docker Hub, so `docker compose up` must be confirmed on the owner's machine before this is done.
+- Status: done
+- Note: verified with `docker compose up -d --build`: app, db and redis healthy; `/openapi.json` 200; `alembic current` shows 0002 (head); create campaign, issue coupon, redeem with `Idempotency-Key` and replay (charged once); spend survives `docker compose restart redis`. The Redis client retries on connection loss; an unavailable store is returned as 503.
 - Depends on: T8
 - Do: `docker-compose.yml` with the service, Redis 7 (AOF on) and PostgreSQL 16; `.env.example` names only; README quick start works.
 - Acceptance: `docker compose up` starts all three; health check responds.
