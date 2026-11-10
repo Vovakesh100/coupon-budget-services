@@ -45,10 +45,11 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Acceptance: integration test with a real Redis (testcontainers): duplicate `Idempotency-Key` does not charge twice; N parallel redemptions do not exceed the budget (TZ criteria 2, 3).
 
 ## T7: PostgreSQL repositories
-- Status: todo
+- Status: done
+- Note: schema, storage split and Alembic were approved by the owner (see docs/adr/0002-storage-split.md). `redeemed` and `redeemed_at` are stored in PostgreSQL but nothing syncs them from Redis yet; that gap must be closed before T8 relies on them.
 - Depends on: T5
-- Do: `adapters/pg_repo.py` for campaigns and coupons (SQLAlchemy async or plain asyncpg, decided in an ADR if it differs from CLAUDE.md).
-- Acceptance: integration test; schema and migration strategy need an owner decision before this task starts (ask first).
+- Do: `adapters/pg_repo.py` for campaign and coupon records (SQLAlchemy 2 async over asyncpg), Alembic migration `0001`.
+- Acceptance: integration test with a real PostgreSQL (`DATABASE_URL`); migrated schema matches the models (`alembic check` clean in the test).
 
 ## T8: HTTP API
 - Status: todo
