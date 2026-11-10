@@ -20,14 +20,9 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import FastAPI
-from redis.asyncio import Redis
-from redis.asyncio.retry import Retry
-from redis.backoff import ExponentialBackoff
-from redis.exceptions import ConnectionError as RedisConnectionError
-from redis.exceptions import TimeoutError as RedisTimeoutError
-
 from coupon_budget.adapters.pg_repo import PgCampaignRepository, create_engine, make_session_factory
 from coupon_budget.adapters.redis_budget import RedisBudgetStore
+from coupon_budget.adapters.redis_client import build_redis_client
 from coupon_budget.api.errors import install_error_handlers
 from coupon_budget.api.routes import router
 from coupon_budget.config.database import database_url_from_env, redis_url_from_env
@@ -43,12 +38,7 @@ def _build_service_from_env(app: FastAPI) -> CouponService:
     environ = os.environ
     rules = load_rules_from_env(environ)
     engine = create_engine(database_url_from_env(environ))
-    redis = Redis.from_url(
-        redis_url_from_env(environ),
-        retry=Retry(ExponentialBackoff(), retries=3),
-        retry_on_error=[RedisConnectionError, RedisTimeoutError],
-        health_check_interval=30,
-    )
+    redis = build_redis_client(redis_url_from_env(environ))
     app.state.engine = engine
     app.state.redis = redis
     return CouponService(
