@@ -6,6 +6,8 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
 from coupon_budget.domain.budget import BudgetExceededError
 from coupon_budget.domain.coupon import CampaignExpiredError, CouponAlreadyRedeemedError
@@ -27,6 +29,8 @@ ERROR_MAP: dict[type[Exception], tuple[int, str]] = {
     RecordAlreadyExistsError: (409, "already_exists"),
     LimitExceededError: (422, "limit_exceeded"),
     InvalidRequestError: (422, "invalid_request"),
+    RedisConnectionError: (503, "budget_store_unavailable"),
+    RedisTimeoutError: (503, "budget_store_unavailable"),
 }
 
 

@@ -3,6 +3,13 @@
 create_app(service=...) takes a ready service (used by tests). create_app() with no argument
 builds the real service from environment variables on startup: DATABASE_URL, REDIS_URL and
 SETTINGS_FILE. Nothing is read at import time.
+
+The Redis client retries a command (3 attempts, exponential backoff) when the connection drops,
+for example after a Redis restart, and checks idle pooled connections every 30 seconds. Retrying
+is safe: redemption is one atomic Lua script that writes the idempotency key in the same
+operation, so a repeat after a lost reply returns `replay` and never charges twice. The Redis
+writes of add_campaign and add_coupon set fixed values, so repeating them changes nothing.
+If Redis stays unavailable after the retries, the API answers 503 (see errors.py).
 """
 
 from __future__ import annotations
@@ -14,6 +21,10 @@ from datetime import UTC, datetime
 
 from fastapi import FastAPI
 from redis.asyncio import Redis
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialBackoff
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
 from coupon_budget.adapters.pg_repo import PgCampaignRepository, create_engine, make_session_factory
 from coupon_budget.adapters.redis_budget import RedisBudgetStore
@@ -32,7 +43,12 @@ def _build_service_from_env(app: FastAPI) -> CouponService:
     environ = os.environ
     rules = load_rules_from_env(environ)
     engine = create_engine(database_url_from_env(environ))
-    redis = Redis.from_url(redis_url_from_env(environ))
+    redis = Redis.from_url(
+        redis_url_from_env(environ),
+        retry=Retry(ExponentialBackoff(), retries=3),
+        retry_on_error=[RedisConnectionError, RedisTimeoutError],
+        health_check_interval=30,
+    )
     app.state.engine = engine
     app.state.redis = redis
     return CouponService(
