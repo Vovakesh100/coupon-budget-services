@@ -3,7 +3,9 @@ name = "coupon-budget-service"
 version = "0.1.0"
 description = "Coupon issuing service with atomic, idempotent budget redemption (portfolio demo)."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "redis>=5.0",
+]
 
 [dependency-groups]
 dev = [
