@@ -19,7 +19,7 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - TZ: criterion 4.
 
 ## T3: Campaign and coupon rules (domain, pure)
-- Status: todo
+- Status: done
 - Depends on: T2
 - Do: `domain/budget.py`, `domain/coupon.py`: `spent <= budget`, expiry check, full redemption only.
 - Acceptance: Hypothesis property `spent <= budget` over random operation sequences; expired campaign refuses redemption; partial redemption is impossible.
