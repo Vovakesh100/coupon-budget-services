@@ -52,8 +52,9 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Acceptance: integration test with a real PostgreSQL (`DATABASE_URL`); migrated schema matches the models (`alembic check` clean in the test).
 
 ## T8: HTTP API
-- Status: todo
+- Status: done
 - Depends on: T6, T7
+- Note: write order is PostgreSQL record first, then Redis budget state (see services/coupons.py). Error codes: 404 not found, 409 state conflicts, 422 limits and invalid input. Dependencies added with owner approval: fastapi, httpx (tests), uvicorn (server).
 - Do: four routes from TZ: `POST /campaigns`, `POST /campaigns/{id}/coupons`, `POST /coupons/{id}/redeem` (with `Idempotency-Key`), `GET /campaigns/{id}/budget`.
 - Acceptance: API tests; OpenAPI generated; the routes match TZ exactly.
 
