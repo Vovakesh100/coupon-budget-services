@@ -46,7 +46,7 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 
 ## T7: PostgreSQL repositories
 - Status: done
-- Note: schema, storage split and Alembic were approved by the owner (see docs/adr/0002-storage-split.md). `redeemed` and `redeemed_at` are stored in PostgreSQL but nothing syncs them from Redis yet; that gap must be closed before T8 relies on them.
+- Note: schema, storage split and Alembic were approved by the owner (see docs/adr/0002-storage-split.md). Redemption state was removed from PostgreSQL in T7-1 (migration 0002); Redis is the only source for it.
 - Depends on: T5
 - Do: `adapters/pg_repo.py` for campaign and coupon records (SQLAlchemy 2 async over asyncpg), Alembic migration `0001`.
 - Acceptance: integration test with a real PostgreSQL (`DATABASE_URL`); migrated schema matches the models (`alembic check` clean in the test).

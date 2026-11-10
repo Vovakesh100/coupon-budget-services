@@ -44,20 +44,16 @@ class CampaignRecord:
 
 @dataclass(frozen=True, slots=True)
 class CouponRecord:
+    """An issued coupon. Redemption state is not here: the budget store owns it."""
+
     id: str
     campaign_id: str
     face_value_micro: int
-    redeemed: bool = False
-    redeemed_at: datetime | None = None
 
     def __post_init__(self) -> None:
         _check_id(self.id)
         _check_id(self.campaign_id)
         _check_micro(self.face_value_micro)
-        if self.redeemed != (self.redeemed_at is not None):
-            raise ValueError("redeemed_at must be set exactly when redeemed is true")
-        if self.redeemed_at is not None and self.redeemed_at.tzinfo is None:
-            raise ValueError("redeemed_at must be timezone-aware")
 
 
 class CampaignRepository(Protocol):
