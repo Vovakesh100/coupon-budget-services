@@ -26,7 +26,7 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - TZ: criteria 1, MVP 1–2.
 
 ## T4: Settings file (versioned)
-- Status: todo
+- Status: done
 - Depends on: T1
 - Do: `config/` loads limits and expiry rules from a versioned settings file; nothing hard-coded in code.
 - Acceptance: test shows a new settings version is applied (TZ criterion 5).
