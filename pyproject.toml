@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Coupon issuing service with atomic, idempotent budget redemption (portfolio demo)."
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.13",
+    "asyncpg>=0.29",
     "redis>=5.0",
+    "sqlalchemy[asyncio]>=2.0",
 ]
 
 [dependency-groups]
