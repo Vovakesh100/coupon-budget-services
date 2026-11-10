@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import FastAPI
+
 from coupon_budget.adapters.pg_repo import PgCampaignRepository, create_engine, make_session_factory
 from coupon_budget.adapters.redis_budget import RedisBudgetStore
 from coupon_budget.adapters.redis_client import build_redis_client
