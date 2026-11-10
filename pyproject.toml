@@ -1,0 +1,38 @@
+[project]
+name = "coupon-budget-service"
+version = "0.1.0"
+description = "Coupon issuing service with atomic, idempotent budget redemption (portfolio demo)."
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.100",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+files = ["src", "tests"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "coupon_budget.domain.*"
+strict = true
