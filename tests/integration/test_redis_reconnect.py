@@ -9,7 +9,7 @@ import asyncio
 import os
 import uuid
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pytest
 from redis.asyncio import Redis
@@ -41,7 +41,7 @@ def _run[T](scenario: Callable[[Redis], Awaitable[T]]) -> T:
 async def _kill_client_connections() -> None:
     admin = Redis.from_url(REDIS_URL)
     try:
-        await admin.execute_command("CLIENT", "KILL", "TYPE", "normal", "SKIPME", "yes")
+        await admin.client_kill_filter(_type="normal", skipme=True)
     finally:
         await admin.aclose()
 
