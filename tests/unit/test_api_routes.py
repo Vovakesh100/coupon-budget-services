@@ -6,9 +6,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
 from coupon_budget.api.app import create_app
 from coupon_budget.config.rules import Rules
+from coupon_budget.domain.budget import Campaign
 from coupon_budget.services.coupons import CouponService
 from tests.fakes.memory_budget_store import MemoryBudgetStore
 from tests.fakes.memory_repository import MemoryCampaignRepository
@@ -151,3 +154,26 @@ def test_budget_for_unknown_campaign_is_404(client: TestClient) -> None:
     resp = client.get("/campaigns/ghost/budget")
     assert resp.status_code == 404
     assert resp.json()["error"] == "campaign_not_found"
+
+
+class _UnavailableBudgetStore(MemoryBudgetStore):
+    def __init__(self, error: Exception) -> None:
+        super().__init__(RULES.idempotency_key_ttl_seconds)
+        self._error = error
+
+    async def get_campaign(self, campaign_id: str) -> Campaign | None:
+        raise self._error
+
+
+@pytest.mark.parametrize("error", [RedisConnectionError("down"), RedisTimeoutError("slow")])
+def test_unavailable_budget_store_is_503(error: Exception) -> None:
+    service = CouponService(
+        records=MemoryCampaignRepository(),
+        budget=_UnavailableBudgetStore(error),
+        rules=RULES,
+        clock=lambda: NOW,
+    )
+    with TestClient(create_app(service=service)) as test_client:
+        response = test_client.get("/campaigns/any/budget")
+    assert response.status_code == 503
+    assert response.json()["error"] == "budget_store_unavailable"
