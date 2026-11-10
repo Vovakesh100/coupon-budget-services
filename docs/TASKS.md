@@ -32,7 +32,7 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
 - Acceptance: test shows a new settings version is applied (TZ criterion 5).
 
 ## T5: Budget store port and fake
-- Status: todo
+- Status: done
 - Depends on: T3
 - Do: `ports/budget_store.py` interface and an in-memory fake used by service tests.
 - Acceptance: service tests use only the fake; no Redis in unit tests.
