@@ -12,7 +12,7 @@ Each task: one branch `task/<id>-<slug>`, one PR into `main`, linked to a TZ ite
   3. `src/coupon_budget/domain/` imports nothing from FastAPI, Redis or SQLAlchemy (checked by a test).
 
 ## T2: Money type (domain)
-- Status: todo
+- Status: done
 - Depends on: T1
 - Do: `domain/money.py`: integer micro amounts, no `float`, round down on any conversion.
 - Acceptance: unit tests and a Hypothesis test for arithmetic; `float` is rejected by the type or constructor.
