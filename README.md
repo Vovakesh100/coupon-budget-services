@@ -33,6 +33,93 @@ uv run mypy .
 uv run pytest
 ```
 
+## Example run
+
+Start the stack (see Quick start). The app listens on port 8000. Log lines from `docker compose up` on macOS:
+
+```
+app-1  | INFO:     Application startup complete.
+app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app-1  | INFO:     127.0.0.1:45850 - "GET /openapi.json HTTP/1.1" 200 OK
+```
+
+Create a campaign with a budget of 500000 micro units:
+
+```bash
+curl -s -X POST localhost:8000/campaigns -H "content-type: application/json" \
+  -d '{"total_micro": 500000, "ends_at": "2027-01-01T00:00:00Z"}'
+```
+```json
+{"id":"0fb175a103b742d4a418a143134af24c","total_micro":500000,"ends_at":"2027-01-01T00:00:00Z"}
+```
+
+Issue a coupon of 120000 micro units under it:
+
+```bash
+curl -s -X POST localhost:8000/campaigns/<campaign_id>/coupons \
+  -H "content-type: application/json" -d '{"face_value_micro": 120000}'
+```
+```json
+{"id":"7e37fbab48864716b9e949f59612d3ff","campaign_id":"0fb175a103b742d4a418a143134af24c","face_value_micro":120000}
+```
+
+Redeem it. Send the same `Idempotency-Key` again and the response is the same, with no second charge:
+
+```bash
+curl -s -X POST localhost:8000/coupons/<coupon_id>/redeem -H "Idempotency-Key: demo-1"
+curl -s -X POST localhost:8000/coupons/<coupon_id>/redeem -H "Idempotency-Key: demo-1"   # repeat
+```
+```json
+{"coupon_id":"7e37fbab48864716b9e949f59612d3ff","campaign_id":"0fb175a103b742d4a418a143134af24c","face_value_micro":120000,"redeemed":true}
+```
+
+Read the budget:
+
+```bash
+curl -s localhost:8000/campaigns/<campaign_id>/budget
+```
+```json
+{"campaign_id":"0fb175a103b742d4a418a143134af24c","allocated_micro":500000,"spent_micro":120000,"remaining_micro":380000}
+```
+
+Amounts must be integers. A float is rejected with HTTP 422:
+
+```bash
+curl -s -X POST localhost:8000/campaigns/<campaign_id>/coupons -H "content-type: application/json" \
+  -d '{"face_value_micro": 1.5}' -o /dev/null -w "HTTP %{http_code}\n"
+```
+```
+HTTP 422
+```
+
+An amount above the limit in `settings/rules.v1.toml` is rejected with a stable error code:
+
+```json
+{"error":"limit_exceeded","message":"face_value_micro is above the coupon limit"}
+```
+
+The routes are described by the OpenAPI schema, which lists these four paths:
+
+```
+POST /campaigns
+POST /campaigns/{campaign_id}/coupons
+POST /coupons/{coupon_id}/redeem
+GET /campaigns/{campaign_id}/budget
+```
+
+## Test results
+
+Run with `DATABASE_URL` and `REDIS_URL` set, against local PostgreSQL 16 and Redis 7. Without them the integration tests are skipped:
+
+```
+$ uv run ruff check .
+All checks passed!
+$ uv run mypy .
+Success: no issues found in 50 source files
+$ uv run pytest -q
+115 passed, 1 warning in 4.80s
+```
+
 ## Architecture
 
 Domain logic has no I/O. Redis and PostgreSQL sit behind interfaces in `ports/`. The budget invariant (`spent <= budget`) is checked by property tests and concurrency tests. See `docs/TZ.md` and `docs/adr/`.
