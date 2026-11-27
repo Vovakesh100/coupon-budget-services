@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: coupon
+          POSTGRES_PASSWORD: coupon
+          POSTGRES_DB: coupon_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coupon -d coupon_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Disposable CI database: integration tests migrate it and truncate tables.
+      DATABASE_URL: postgresql+asyncpg://coupon:coupon@localhost:5432/coupon_test
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Type check
+        run: uv run mypy .
+
+      - name: Tests
+        # Integration tests skip silently without DATABASE_URL/REDIS_URL.
+        # Fail the job if any test was skipped, so a green run means everything ran.
+        run: |
+          uv run pytest -ra 2>&1 | tee pytest.log
+          if grep -q "SKIPPED" pytest.log; then
+            echo "::error::Some tests were skipped. Check DATABASE_URL and REDIS_URL."
+            exit 1
+          fi
